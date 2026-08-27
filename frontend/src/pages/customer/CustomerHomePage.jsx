@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { orgApi } from '../../api/orgApi';
 import { OrgCard } from '../../components/customer/OrgCard';
+import { FindTicketModal } from '../../components/customer/FindTicketModal';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
 import { useSocket } from '../../context/SocketContext';
-import { Search, MapPin, Filter, Layers, AlertCircle, Building2, Radio } from 'lucide-react';
+import { Search, MapPin, Filter, Layers, AlertCircle, Building2, Radio, Ticket } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'ALL', label: 'All Categories' },
@@ -23,6 +24,7 @@ export const CustomerHomePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [city, setCity] = useState('');
+  const [isFindTicketOpen, setIsFindTicketOpen] = useState(false);
 
   const fetchOrganizations = useCallback(async (isBackground = false) => {
     try {
@@ -102,10 +104,20 @@ export const CustomerHomePage = () => {
           </p>
         </div>
 
-        {/* Real-time status badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold self-start sm:self-auto">
-          <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-          <span>Live Queue Status Active</span>
+        {/* Action pills */}
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={() => setIsFindTicketOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Ticket className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span>Find My Ticket</span>
+          </button>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+            <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+            <span>Live Queue Sync</span>
+          </div>
         </div>
       </div>
 
@@ -214,6 +226,9 @@ export const CustomerHomePage = () => {
           </div>
         </div>
       )}
+
+      {/* Find My Ticket Modal */}
+      <FindTicketModal isOpen={isFindTicketOpen} onClose={() => setIsFindTicketOpen(false)} />
     </div>
   );
 };

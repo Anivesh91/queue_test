@@ -8,6 +8,9 @@ const {
   mongoIdParamValidator,
 } = require('../validators/schemas');
 
+// Public lookup by phone (defined before :publicToken)
+router.get('/lookup', ticketController.lookupTickets);
+
 // Public tracking and guest cancellation
 router.get('/:publicToken', publicTokenValidator, validate, ticketController.trackTicket);
 router.post('/:publicToken/cancel', publicTokenValidator, validate, ticketController.cancelTicket);

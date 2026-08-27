@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { queueApi } from '../../api/queueApi';
-import { User, Phone, AlertCircle, Ticket, Clock } from 'lucide-react';
+import { User, Phone, AlertCircle, Ticket, Clock, CheckCircle2 } from 'lucide-react';
 
 export const JoinQueueModal = ({ isOpen, onClose, service }) => {
   const navigate = useNavigate();
@@ -35,8 +35,27 @@ export const JoinQueueModal = ({ isOpen, onClose, service }) => {
         phone: phone.trim(),
       });
 
-      const publicToken = res?.data?.publicToken || res?.data?.ticket?.publicToken;
+      const data = res?.data;
+      const publicToken = data?.publicToken || data?.ticket?.publicToken;
+
       if (publicToken) {
+        // Save to local storage for quick recovery
+        try {
+          const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
+          const filtered = saved.filter((t) => t.publicToken !== publicToken);
+          filtered.unshift({
+            publicToken,
+            ticketNumber: data.ticket?.ticketNumber,
+            serviceName: service.name,
+            organizationName: data.ticket?.organizationName || service.organizationId?.name,
+            status: data.ticket?.status || 'WAITING',
+            joinedAt: data.ticket?.joinedAt || new Date().toISOString(),
+          });
+          localStorage.setItem('queueless_active_tickets', JSON.stringify(filtered.slice(0, 5)));
+        } catch (storageErr) {
+          console.warn('Storage error:', storageErr);
+        }
+
         onClose();
         navigate(`/customer/tickets/${publicToken}`);
       } else {
@@ -114,7 +133,7 @@ export const JoinQueueModal = ({ isOpen, onClose, service }) => {
             />
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            No account required. Used to secure your ticket and prevent duplicate turns.
+            If you already have a ticket with this phone number, you will instantly restore your existing spot in line.
           </p>
         </div>
 

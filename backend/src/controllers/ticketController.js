@@ -11,6 +11,16 @@ const trackTicket = async (req, res, next) => {
   }
 };
 
+const lookupTickets = async (req, res, next) => {
+  try {
+    const { phone } = req.query;
+    const result = await ticketService.lookupActiveTicketsByPhone(phone);
+    res.status(200).json(new ApiResponse(200, result, 'Active tickets retrieved'));
+  } catch (error) {
+    next(error);
+  }
+};
+
 const cancelTicket = async (req, res, next) => {
   try {
     const { publicToken } = req.params;
@@ -53,6 +63,7 @@ const markNoShow = async (req, res, next) => {
 
 module.exports = {
   trackTicket,
+  lookupTickets,
   cancelTicket,
   startServing,
   completeTicket,

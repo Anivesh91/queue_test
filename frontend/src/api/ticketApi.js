@@ -2,6 +2,7 @@ import apiClient from './client';
 
 export const ticketApi = {
   track: (publicToken) => apiClient.get(`/tickets/${publicToken}`),
+  lookup: (phone) => apiClient.get('/tickets/lookup', { params: { phone } }),
   cancel: (publicToken) => apiClient.post(`/tickets/${publicToken}/cancel`),
   start: (ticketId) => apiClient.post(`/tickets/${ticketId}/start`),
   complete: (ticketId) => apiClient.post(`/tickets/${ticketId}/complete`),

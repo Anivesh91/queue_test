@@ -36,7 +36,7 @@ const notifyWaitingPositions = async (serviceId, avgServiceTime) => {
 };
 
 /**
- * Guest joins an OPEN queue
+ * Guest joins an OPEN queue or recovers their existing active ticket seamlessly
  */
 const joinQueue = async (serviceId, { name, phone }) => {
   const service = await Service.findById(serviceId);
@@ -49,16 +49,10 @@ const joinQueue = async (serviceId, { name, phone }) => {
     throw new ApiError(404, 'Organization is currently inactive.');
   }
 
-  // 1. Check queue status (must be OPEN)
-  let queue = await Queue.findOne({ serviceId });
-  if (!queue || queue.status !== 'OPEN') {
-    throw new ApiError(409, 'Queue is currently closed. New joins are not accepted at this time.');
-  }
-
   const cleanPhone = phone.trim();
   const cleanName = name.trim();
 
-  // 2. Duplicate active ticket prevention (same phone + same service)
+  // 1. Check if user already has an active ticket in this service -> Seamlessly restore it!
   const existingActiveTicket = await Ticket.findOne({
     serviceId,
     customerPhone: cleanPhone,
@@ -66,10 +60,42 @@ const joinQueue = async (serviceId, { name, phone }) => {
   });
 
   if (existingActiveTicket) {
-    throw new ApiError(
-      409,
-      `You already have an active ticket (${existingActiveTicket.ticketNumber}) in this queue.`
-    );
+    let peopleAhead = 0;
+    let estimatedWaitMinutes = 0;
+
+    if (existingActiveTicket.status === 'WAITING') {
+      peopleAhead = await Ticket.countDocuments({
+        serviceId,
+        status: 'WAITING',
+        sequenceNumber: { $lt: existingActiveTicket.sequenceNumber },
+      });
+      estimatedWaitMinutes = peopleAhead * (service.averageServiceTime || 10);
+    }
+
+    return {
+      ticket: {
+        id: existingActiveTicket._id,
+        publicToken: existingActiveTicket.publicToken,
+        ticketNumber: existingActiveTicket.ticketNumber,
+        customerName: existingActiveTicket.customerName,
+        customerPhone: existingActiveTicket.customerPhone,
+        status: existingActiveTicket.status,
+        joinedAt: existingActiveTicket.joinedAt,
+        serviceName: service.name,
+        organizationName: org.name,
+      },
+      peopleAhead,
+      estimatedWaitMinutes,
+      publicToken: existingActiveTicket.publicToken,
+      isExisting: true,
+      message: `Welcome back! Restored your existing ticket #${existingActiveTicket.ticketNumber}.`,
+    };
+  }
+
+  // 2. Check queue status (must be OPEN for new tickets)
+  let queue = await Queue.findOne({ serviceId });
+  if (!queue || queue.status !== 'OPEN') {
+    throw new ApiError(409, 'Queue is currently closed. New joins are not accepted at this time.');
   }
 
   // 3. Allocate atomic sequence number
@@ -141,7 +167,59 @@ const joinQueue = async (serviceId, { name, phone }) => {
     peopleAhead,
     estimatedWaitMinutes,
     publicToken,
+    isExisting: false,
   };
+};
+
+/**
+ * Lookup all active tickets for a customer by phone number
+ */
+const lookupActiveTicketsByPhone = async (phone) => {
+  if (!phone || phone.trim().length < 4) {
+    throw new ApiError(400, 'Please provide a valid phone number.');
+  }
+
+  const cleanPhone = phone.trim();
+  const activeTickets = await Ticket.find({
+    customerPhone: cleanPhone,
+    status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
+  })
+    .populate('serviceId', 'name ticketPrefix averageServiceTime')
+    .populate('organizationId', 'name slug category')
+    .sort({ joinedAt: -1 });
+
+  const formattedTickets = await Promise.all(
+    activeTickets.map(async (t) => {
+      let peopleAhead = 0;
+      let estimatedWaitMinutes = 0;
+
+      if (t.status === 'WAITING' && t.serviceId) {
+        peopleAhead = await Ticket.countDocuments({
+          serviceId: t.serviceId._id,
+          status: 'WAITING',
+          sequenceNumber: { $lt: t.sequenceNumber },
+        });
+        estimatedWaitMinutes = peopleAhead * (t.serviceId.averageServiceTime || 10);
+      }
+
+      return {
+        id: t._id,
+        publicToken: t.publicToken,
+        ticketNumber: t.ticketNumber,
+        customerName: t.customerName,
+        customerPhone: t.customerPhone,
+        status: t.status,
+        joinedAt: t.joinedAt,
+        calledAt: t.calledAt,
+        service: t.serviceId,
+        organization: t.organizationId,
+        peopleAhead,
+        estimatedWaitMinutes,
+      };
+    })
+  );
+
+  return { tickets: formattedTickets };
 };
 
 /**
@@ -451,6 +529,7 @@ const markNoShowTicket = async (ownerId, ticketId) => {
 
 module.exports = {
   joinQueue,
+  lookupActiveTicketsByPhone,
   trackTicket,
   cancelTicket,
   callNextTicket,
