@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { orgApi } from '../../api/orgApi';
 import { OrgCard } from '../../components/customer/OrgCard';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
-import { Search, ArrowLeft, Building2 } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
+import { Search, ArrowLeft, Building2, Radio } from 'lucide-react';
 
 export const SearchResultsPage = () => {
+  const { socket } = useSocket();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
@@ -15,20 +17,57 @@ export const SearchResultsPage = () => {
   const [loading, setLoading] = useState(true);
   const [queryInput, setQueryInput] = useState(search);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        setLoading(true);
-        const res = await orgApi.search({ search, category, city });
-        setOrganizations(res?.data?.organizations || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchResults();
+  const fetchResults = useCallback(async (isBackground = false) => {
+    try {
+      if (!isBackground) setLoading(true);
+      const res = await orgApi.search({ search, category, city });
+      setOrganizations(res?.data?.organizations || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (!isBackground) setLoading(false);
+    }
   }, [search, category, city]);
+
+  useEffect(() => {
+    fetchResults(false);
+  }, [search, category, city, fetchResults]);
+
+  // Real-time Socket.IO Sync
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleQueueStatusChanged = (payload) => {
+      setOrganizations((prevOrgs) =>
+        prevOrgs.map((org) => {
+          if (org._id === payload.organizationId) {
+            let currentOpen = org.openQueuesCount || 0;
+            if (payload.status === 'OPEN') {
+              currentOpen = Math.min(currentOpen + 1, org.servicesCount || 99);
+            } else if (payload.status === 'CLOSED') {
+              currentOpen = Math.max(0, currentOpen - 1);
+            }
+            return { ...org, openQueuesCount: currentOpen };
+          }
+          return org;
+        })
+      );
+      fetchResults(true);
+    };
+
+    const handleQueueUpdated = () => {
+      fetchResults(true);
+    };
+
+    socket.on('queue:statusChanged', handleQueueStatusChanged);
+    socket.on('queue:updated', handleQueueUpdated);
+    socket.on('connect', () => fetchResults(true));
+
+    return () => {
+      socket.off('queue:statusChanged', handleQueueStatusChanged);
+      socket.off('queue:updated', handleQueueUpdated);
+    };
+  }, [socket, fetchResults]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -38,20 +77,27 @@ export const SearchResultsPage = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Back button & Title */}
-      <div className="mb-6">
-        <Link
-          to="/customer"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 mb-3 transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Discovery</span>
-        </Link>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Organization Directory & Search
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          {search ? `Showing results for "${search}"` : 'Browse all registered service organizations.'}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <Link
+            to="/customer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 mb-3 transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Discovery</span>
+          </Link>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Organization Directory & Search
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {search ? `Showing results for "${search}"` : 'Browse all registered service organizations.'}
+          </p>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold self-start sm:self-auto">
+          <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+          <span>Real-Time Sync</span>
+        </div>
       </div>
 
       {/* Search Bar */}

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { orgApi } from '../../api/orgApi';
 import { OrgCard } from '../../components/customer/OrgCard';
 import { LoadingSkeleton } from '../../components/common/LoadingSkeleton';
-import { Search, MapPin, Filter, Layers, AlertCircle, Building2 } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
+import { Search, MapPin, Filter, Layers, AlertCircle, Building2, Radio } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'ALL', label: 'All Categories' },
@@ -15,6 +16,7 @@ const CATEGORIES = [
 ];
 
 export const CustomerHomePage = () => {
+  const { socket, isConnected } = useSocket();
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,9 +24,9 @@ export const CustomerHomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [city, setCity] = useState('');
 
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       setError('');
       const params = {};
       if (searchTerm.trim()) params.search = searchTerm.trim();
@@ -34,31 +36,77 @@ export const CustomerHomePage = () => {
       const res = await orgApi.search(params);
       setOrganizations(res?.data?.organizations || []);
     } catch (err) {
-      setError(err.message || 'Failed to load organizations.');
+      if (!isBackground) setError(err.message || 'Failed to load organizations.');
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
-  };
+  }, [searchTerm, selectedCategory, city]);
 
   useEffect(() => {
-    fetchOrganizations();
-  }, [selectedCategory]);
+    fetchOrganizations(false);
+  }, [selectedCategory, fetchOrganizations]);
+
+  // Real-Time Socket.IO Synchronization for Live Queue Status & Counts
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleQueueStatusChanged = (payload) => {
+      // Optimistically update the organization's open queues count
+      setOrganizations((prevOrgs) =>
+        prevOrgs.map((org) => {
+          if (org._id === payload.organizationId) {
+            let currentOpen = org.openQueuesCount || 0;
+            if (payload.status === 'OPEN') {
+              currentOpen = Math.min(currentOpen + 1, org.servicesCount || 99);
+            } else if (payload.status === 'CLOSED') {
+              currentOpen = Math.max(0, currentOpen - 1);
+            }
+            return { ...org, openQueuesCount: currentOpen };
+          }
+          return org;
+        })
+      );
+      // Background re-fetch to ensure perfect consistency
+      fetchOrganizations(true);
+    };
+
+    const handleQueueUpdated = () => {
+      fetchOrganizations(true);
+    };
+
+    socket.on('queue:statusChanged', handleQueueStatusChanged);
+    socket.on('queue:updated', handleQueueUpdated);
+    socket.on('connect', () => fetchOrganizations(true));
+
+    return () => {
+      socket.off('queue:statusChanged', handleQueueStatusChanged);
+      socket.off('queue:updated', handleQueueUpdated);
+    };
+  }, [socket, fetchOrganizations]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchOrganizations();
+    fetchOrganizations(false);
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Find a Virtual Queue
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Search registered businesses, check live waiting times, and join remotely.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Find a Virtual Queue
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Search registered businesses, check live waiting times, and join remotely.
+          </p>
+        </div>
+
+        {/* Real-time status badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold self-start sm:self-auto">
+          <Radio className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+          <span>Live Queue Status Active</span>
+        </div>
       </div>
 
       {/* Search & Filter Controls */}

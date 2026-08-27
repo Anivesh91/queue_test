@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { orgApi } from '../../api/orgApi';
 import { ServiceCard } from '../../components/customer/ServiceCard';
@@ -13,6 +13,7 @@ import {
   Layers,
   AlertCircle,
   Clock,
+  Radio,
 } from 'lucide-react';
 
 export const PublicOrgPage = () => {
@@ -24,43 +25,78 @@ export const PublicOrgPage = () => {
   const [error, setError] = useState('');
   const [selectedServiceForJoin, setSelectedServiceForJoin] = useState(null);
 
-  const fetchOrganization = async () => {
+  const fetchOrganization = useCallback(async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       setError('');
       const res = await orgApi.getBySlug(slug);
       setOrganization(res?.data?.organization || null);
     } catch (err) {
-      setError(err.message || 'Failed to load organization profile.');
+      if (!isBackground) setError(err.message || 'Failed to load organization profile.');
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchOrganization();
   }, [slug]);
 
-  // Listen to live queue events to keep service counts in sync
+  useEffect(() => {
+    fetchOrganization(false);
+  }, [slug, fetchOrganization]);
+
+  // Listen to live queue events to keep service counts and statuses in sync
   useEffect(() => {
     if (!socket) return;
 
-    const handleQueueUpdated = () => {
-      fetchOrganization();
+    const handleStatusChanged = (payload) => {
+      // Optimistically update service queue status in state
+      setOrganization((prev) => {
+        if (!prev || !prev.services) return prev;
+        const updatedServices = prev.services.map((srv) => {
+          if (srv._id === payload.serviceId) {
+            return {
+              ...srv,
+              queue: {
+                ...(srv.queue || {}),
+                status: payload.status,
+              },
+            };
+          }
+          return srv;
+        });
+        return { ...prev, services: updatedServices };
+      });
+      fetchOrganization(true);
     };
 
-    const handleStatusChanged = () => {
-      fetchOrganization();
+    const handleQueueUpdated = (payload) => {
+      setOrganization((prev) => {
+        if (!prev || !prev.services) return prev;
+        const updatedServices = prev.services.map((srv) => {
+          if (srv._id === payload.serviceId) {
+            return {
+              ...srv,
+              waitingCount: payload.waitingCount !== undefined ? payload.waitingCount : srv.waitingCount,
+              queue: {
+                ...(srv.queue || {}),
+                status: payload.status || srv.queue?.status,
+              },
+            };
+          }
+          return srv;
+        });
+        return { ...prev, services: updatedServices };
+      });
+      fetchOrganization(true);
     };
 
     socket.on('queue:updated', handleQueueUpdated);
     socket.on('queue:statusChanged', handleStatusChanged);
+    socket.on('connect', () => fetchOrganization(true));
 
     return () => {
       socket.off('queue:updated', handleQueueUpdated);
       socket.off('queue:statusChanged', handleStatusChanged);
     };
-  }, [socket]);
+  }, [socket, fetchOrganization]);
 
   if (loading) {
     return (

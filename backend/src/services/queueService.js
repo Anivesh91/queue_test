@@ -119,10 +119,20 @@ const openQueue = async (ownerId, serviceId) => {
   );
 
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
+  const orgId = service.organizationId._id || service.organizationId;
 
   // Socket notification
-  socketEmitter.emitQueueStatusChanged(serviceId, ownerId, { status: 'OPEN' });
-  socketEmitter.emitQueueUpdated(serviceId, ownerId, { status: 'OPEN', waitingCount });
+  socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {
+    status: 'OPEN',
+    serviceId: serviceId.toString(),
+    organizationId: orgId.toString(),
+  });
+  socketEmitter.emitQueueUpdated(serviceId, ownerId, {
+    status: 'OPEN',
+    waitingCount,
+    serviceId: serviceId.toString(),
+    organizationId: orgId.toString(),
+  });
 
   return queue;
 };
@@ -144,10 +154,20 @@ const closeQueue = async (ownerId, serviceId) => {
   );
 
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
+  const orgId = service.organizationId._id || service.organizationId;
 
   // Socket notification
-  socketEmitter.emitQueueStatusChanged(serviceId, ownerId, { status: 'CLOSED' });
-  socketEmitter.emitQueueUpdated(serviceId, ownerId, { status: 'CLOSED', waitingCount });
+  socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {
+    status: 'CLOSED',
+    serviceId: serviceId.toString(),
+    organizationId: orgId.toString(),
+  });
+  socketEmitter.emitQueueUpdated(serviceId, ownerId, {
+    status: 'CLOSED',
+    waitingCount,
+    serviceId: serviceId.toString(),
+    organizationId: orgId.toString(),
+  });
 
   return queue;
 };
