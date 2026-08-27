@@ -28,11 +28,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       sparse: true,
-      default: null,
+      index: true,
     },
     avatar: {
       type: String,
-      default: null,
     },
     authProvider: {
       type: String,
