@@ -11,35 +11,35 @@ export const ServiceCard = ({ service, onJoinClick }) => {
   const estimatedWait = waitingCount * avgTime;
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
       <div>
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 text-slate-700 rounded border border-slate-200">
+            <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700">
               {service.ticketPrefix}
             </span>
-            <h4 className="text-base font-bold text-slate-900">{service.name}</h4>
+            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">{service.name}</h4>
           </div>
           <Badge status={isOpen ? 'OPEN' : 'CLOSED'} />
         </div>
 
         {service.description && (
-          <p className="text-xs text-slate-600 mb-4 line-clamp-2">{service.description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">{service.description}</p>
         )}
 
-        <div className="grid grid-cols-2 gap-2 my-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-          <div className="flex items-center gap-2 text-slate-600">
-            <Users className="w-4 h-4 text-blue-600" />
+        <div className="grid grid-cols-2 gap-2 my-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <div>
-              <div className="text-[10px] text-slate-400 font-medium">WAITING</div>
-              <div className="font-bold text-slate-800">{waitingCount} people</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">WAITING</div>
+              <div className="font-bold text-slate-800 dark:text-slate-100">{waitingCount} people</div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-slate-600">
-            <Clock className="w-4 h-4 text-indigo-600" />
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+            <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <div>
-              <div className="text-[10px] text-slate-400 font-medium">EST. WAIT</div>
-              <div className="font-bold text-slate-800">
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">EST. WAIT</div>
+              <div className="font-bold text-slate-800 dark:text-slate-100">
                 {waitingCount > 0 ? `~${estimatedWait} min` : 'No wait'}
               </div>
             </div>

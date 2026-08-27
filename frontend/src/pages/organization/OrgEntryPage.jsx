@@ -16,28 +16,28 @@ export const OrgEntryPage = () => {
         <Building2 className="w-8 h-8" />
       </div>
 
-      <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
         Organization Owner Portal
       </h1>
-      <p className="text-slate-600 text-base mt-3 max-w-xl mx-auto">
+      <p className="text-slate-600 dark:text-slate-300 text-base mt-3 max-w-xl mx-auto">
         Create and operate high-efficiency virtual queues for your business. Provide your customers with zero-friction live turn tracking.
       </p>
 
       <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl mx-auto">
         {/* Register Card */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between text-left">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between text-left transition-colors duration-200">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-900/50">
               New Business
             </span>
-            <h3 className="text-lg font-bold text-slate-900 mt-3">Register Organization</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-3">Register Organization</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Create an owner account and set up your business services in 2 minutes.
             </p>
           </div>
           <Link
             to="/organization/register"
-            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-all shadow-sm"
+            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold text-sm rounded-xl transition-all shadow-sm"
           >
             <span>Get Started</span>
             <ArrowRight className="w-4 h-4" />
@@ -45,19 +45,19 @@ export const OrgEntryPage = () => {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between text-left">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between text-left transition-colors duration-200">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">
               Existing Owner
             </span>
-            <h3 className="text-lg font-bold text-slate-900 mt-3">Owner Login</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-3">Owner Login</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Sign in to manage your active queues, call next customers, and update services.
             </p>
           </div>
           <Link
             to="/organization/login"
-            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-sm rounded-xl transition-all"
+            className="mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-sm rounded-xl transition-all"
           >
             <span>Sign In</span>
             <ArrowRight className="w-4 h-4" />

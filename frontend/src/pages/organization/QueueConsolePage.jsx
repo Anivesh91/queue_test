@@ -151,7 +151,7 @@ export const QueueConsolePage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <div className="w-64 hidden md:block bg-white border-r p-4">
+        <div className="w-64 hidden md:block bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4">
           <LoadingSkeleton lines={4} />
         </div>
         <div className="flex-1 p-8">
@@ -165,11 +165,11 @@ export const QueueConsolePage = () => {
     return (
       <div className="max-w-md mx-auto px-4 py-16 text-center">
         <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-slate-800">Queue Not Found</h2>
-        <p className="text-xs text-slate-500 mt-1">{error || 'Could not load service queue.'}</p>
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Queue Not Found</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{error || 'Could not load service queue.'}</p>
         <Link
           to="/organization/dashboard"
-          className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl"
+          className="inline-block mt-4 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white text-xs font-semibold rounded-xl"
         >
           Return to Dashboard
         </Link>
@@ -178,14 +178,14 @@ export const QueueConsolePage = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
       <Sidebar organization={organization} />
 
       <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl">
         {/* Navigation Breadcrumb */}
         <Link
           to="/organization/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-600 mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>

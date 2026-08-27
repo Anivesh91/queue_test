@@ -150,7 +150,7 @@ export const ServicesPage = () => {
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <div className="w-64 hidden md:block bg-white border-r p-4">
+        <div className="w-64 hidden md:block bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4">
           <LoadingSkeleton lines={4} />
         </div>
         <div className="flex-1 p-8">
@@ -161,16 +161,16 @@ export const ServicesPage = () => {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
       <Sidebar organization={organization} />
 
       <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Service Management
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Create, configure, and monitor service queues for <strong>{organization?.name}</strong>.
             </p>
           </div>
@@ -182,7 +182,7 @@ export const ServicesPage = () => {
         </div>
 
         {error && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm flex items-center gap-2 mb-6">
+          <div className="p-4 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-sm flex items-center gap-2 mb-6">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -190,10 +190,10 @@ export const ServicesPage = () => {
 
         {/* Services List Table */}
         {services.length > 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-200">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-600">
-                <thead className="bg-slate-50 text-[11px] uppercase font-semibold text-slate-500 border-b border-slate-100">
+              <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-[11px] uppercase font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4">Prefix</th>
                     <th className="px-6 py-4">Service Name</th>
@@ -203,25 +203,25 @@ export const ServicesPage = () => {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {services.map((service) => {
                     const queue = service.queue || { status: 'CLOSED' };
                     return (
-                      <tr key={service._id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-6 py-4 font-mono font-bold text-slate-900">
-                          <span className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
+                      <tr key={service._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-white">
+                          <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-100 dark:border-blue-900/50">
                             {service.ticketPrefix}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-bold text-slate-900 text-sm">{service.name}</div>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm">{service.name}</div>
                           {service.description && (
-                            <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-1">
                               {service.description}
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-slate-600">
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                           ~{service.averageServiceTime || 10} min
                         </td>
                         <td className="px-6 py-4">
@@ -229,23 +229,23 @@ export const ServicesPage = () => {
                         </td>
                         <td className="px-6 py-4">
                           {service.isActive ? (
-                            <span className="text-[11px] font-semibold text-emerald-600">Active</span>
+                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Active</span>
                           ) : (
-                            <span className="text-[11px] font-semibold text-slate-400">Inactive</span>
+                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Inactive</span>
                           )}
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               to={`/organization/queues/${service._id}`}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-lg transition-colors"
                               title="Open Live Console"
                             >
                               <PlayCircle className="w-4 h-4" />
                             </Link>
                             <button
                               onClick={() => openEditModal(service)}
-                              className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                               title="Edit Service"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -253,7 +253,7 @@ export const ServicesPage = () => {
                             {service.isActive && (
                               <button
                                 onClick={() => handleDeactivate(service._id, service.name)}
-                                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
                                 title="Deactivate Service"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -269,10 +269,10 @@ export const ServicesPage = () => {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 max-w-lg mx-auto">
-            <Layers className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-800">No Services Added</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 max-w-lg mx-auto">
+            <Layers className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No Services Added</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
               Add your first service to start accepting customer queue joins.
             </p>
             <Button variant="primary" onClick={openCreateModal}>
@@ -288,13 +288,13 @@ export const ServicesPage = () => {
           title="Add New Service"
         >
           {modalError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs mb-4">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-700 dark:text-rose-300 text-xs mb-4">
               {modalError}
             </div>
           )}
           <form onSubmit={handleCreateService} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Service Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -303,13 +303,13 @@ export const ServicesPage = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Dental Checkup"
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Prefix (e.g. D, GC) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -319,12 +319,12 @@ export const ServicesPage = () => {
                   value={formData.ticketPrefix}
                   onChange={(e) => setFormData({ ...formData, ticketPrefix: e.target.value.toUpperCase() })}
                   placeholder="D"
-                  className="w-full px-4 py-2.5 font-mono uppercase bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 font-mono uppercase bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Avg Time (Mins)
                 </label>
                 <input
@@ -334,18 +334,18 @@ export const ServicesPage = () => {
                   required
                   value={formData.averageServiceTime}
                   onChange={(e) => setFormData({ ...formData, averageServiceTime: Number(e.target.value) })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Description</label>
               <textarea
                 rows={2}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -367,13 +367,13 @@ export const ServicesPage = () => {
           title="Edit Service"
         >
           {modalError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs mb-4">
+            <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-700 dark:text-rose-300 text-xs mb-4">
               {modalError}
             </div>
           )}
           <form onSubmit={handleUpdateService} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Service Name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -381,13 +381,13 @@ export const ServicesPage = () => {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Prefix (Unique) <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -396,12 +396,12 @@ export const ServicesPage = () => {
                   maxLength={5}
                   value={formData.ticketPrefix}
                   onChange={(e) => setFormData({ ...formData, ticketPrefix: e.target.value.toUpperCase() })}
-                  className="w-full px-4 py-2.5 font-mono uppercase bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 font-mono uppercase bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Avg Time (Mins)
                 </label>
                 <input
@@ -411,18 +411,18 @@ export const ServicesPage = () => {
                   required
                   value={formData.averageServiceTime}
                   onChange={(e) => setFormData({ ...formData, averageServiceTime: Number(e.target.value) })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Description</label>
               <textarea
                 rows={2}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 

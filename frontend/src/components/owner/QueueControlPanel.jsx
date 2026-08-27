@@ -34,16 +34,16 @@ export const QueueControlPanel = ({
   return (
     <div className="space-y-6">
       {/* Top Banner: Status & Toggle */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors duration-200">
         <div>
           <div className="flex items-center gap-3">
-            <span className="font-mono px-2.5 py-1 bg-blue-100 text-blue-800 text-sm font-bold rounded-lg">
+            <span className="font-mono px-2.5 py-1 bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-sm font-bold rounded-lg border border-blue-200 dark:border-blue-900/50">
               {service.ticketPrefix}
             </span>
-            <h2 className="text-xl font-bold text-slate-900">{service.name}</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{service.name}</h2>
             <Badge status={isOpen ? 'OPEN' : 'CLOSED'} size="lg" />
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isOpen
               ? 'Queue is OPEN and actively accepting new guest customers.'
               : 'Queue is CLOSED. Existing waiting customers can still be served.'}
@@ -74,37 +74,37 @@ export const QueueControlPanel = ({
       {/* Active Operational Station Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Current Active Customer */}
-        <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-colors duration-200">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Current Operational Ticket
               </span>
               {currentTicket ? (
                 <Badge status={currentTicket.status} size="md" />
               ) : (
-                <span className="text-xs text-slate-400 font-medium">Counter Idle</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Counter Idle</span>
               )}
             </div>
 
             {currentTicket && ['CALLED', 'SERVING'].includes(currentTicket.status) ? (
               <div className="space-y-4">
                 {/* Big Ticket Display */}
-                <div className="flex items-center justify-between p-4 bg-blue-50/70 border border-blue-100 rounded-2xl">
+                <div className="flex items-center justify-between p-4 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-2xl">
                   <div>
-                    <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                    <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                       Ticket Number
                     </div>
-                    <div className="text-4xl font-extrabold font-mono text-blue-950 mt-1">
+                    <div className="text-4xl font-extrabold font-mono text-blue-950 dark:text-blue-100 mt-1">
                       {currentTicket.ticketNumber}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-slate-500">Customer</div>
-                    <div className="text-base font-bold text-slate-900">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Customer</div>
+                    <div className="text-base font-bold text-slate-900 dark:text-white">
                       {currentTicket.customerName}
                     </div>
-                    <div className="text-xs text-slate-500 font-mono">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                       {currentTicket.customerPhone}
                     </div>
                   </div>
@@ -112,8 +112,8 @@ export const QueueControlPanel = ({
 
                 {/* Status Specific Information */}
                 {isCalled && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
                     <span>
                       Customer has been <strong>CALLED</strong>. Waiting for them to step up to the counter.
                     </span>
@@ -121,8 +121,8 @@ export const QueueControlPanel = ({
                 )}
 
                 {isServing && (
-                  <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-800 text-xs flex items-center gap-2">
-                    <Clock className="w-4 h-4 shrink-0 text-indigo-600" />
+                  <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-indigo-800 dark:text-indigo-300 text-xs flex items-center gap-2">
+                    <Clock className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
                     <span>
                       Currently <strong>SERVING</strong> customer. Click Complete once finished.
                     </span>
@@ -130,10 +130,10 @@ export const QueueControlPanel = ({
                 )}
               </div>
             ) : (
-              <div className="py-12 text-center text-slate-400">
-                <User className="w-12 h-12 mx-auto text-slate-300 mb-2" />
-                <div className="text-sm font-semibold text-slate-600">No active customer at counter</div>
-                <p className="text-xs text-slate-400 mt-1">
+              <div className="py-12 text-center text-slate-400 dark:text-slate-500">
+                <User className="w-12 h-12 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">No active customer at counter</div>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                   Click "Call Next Customer" below to serve the next ticket in line.
                 </p>
               </div>
@@ -141,7 +141,7 @@ export const QueueControlPanel = ({
           </div>
 
           {/* Action buttons for current ticket */}
-          <div className="pt-6 border-t border-slate-100 mt-6 flex flex-wrap items-center gap-3">
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 mt-6 flex flex-wrap items-center gap-3">
             {isCalled && (
               <>
                 <Button
@@ -178,7 +178,7 @@ export const QueueControlPanel = ({
             )}
 
             {!hasActiveCurrent && (
-              <div className="w-full text-center text-xs text-slate-400">
+              <div className="w-full text-center text-xs text-slate-400 dark:text-slate-500">
                 Ready to call next waiting customer
               </div>
             )}
@@ -186,7 +186,7 @@ export const QueueControlPanel = ({
         </div>
 
         {/* Next in Line / Dispatch Console */}
-        <div className="lg:col-span-5 bg-gradient-to-b from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-700/60 mb-4">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
