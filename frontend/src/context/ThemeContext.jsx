@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const ThemeContext = createContext(null);
 
@@ -18,37 +18,27 @@ export const ThemeProvider = ({ children }) => {
     return 'light';
   });
 
-  const applyThemeToDOM = useCallback((currentTheme) => {
+  useEffect(() => {
     const root = document.documentElement;
-    const body = document.body;
+    const isDark = theme === 'dark';
 
-    if (currentTheme === 'dark') {
+    if (isDark) {
       root.classList.add('dark');
-      if (body) body.classList.add('dark');
-      root.style.colorScheme = 'dark';
+      document.body.classList.add('dark');
     } else {
       root.classList.remove('dark');
-      if (body) body.classList.remove('dark');
-      root.style.colorScheme = 'light';
+      document.body.classList.remove('dark');
     }
 
     try {
-      localStorage.setItem('queueless_theme', currentTheme);
+      localStorage.setItem('queueless_theme', theme);
     } catch (e) {
       console.warn('Could not save theme to localStorage:', e);
     }
-  }, []);
-
-  useEffect(() => {
-    applyThemeToDOM(theme);
-  }, [theme, applyThemeToDOM]);
+  }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => {
-      const nextTheme = prevTheme === 'dark' ? 'light' : 'dark';
-      applyThemeToDOM(nextTheme);
-      return nextTheme;
-    });
+    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
 
   const isDark = theme === 'dark';
