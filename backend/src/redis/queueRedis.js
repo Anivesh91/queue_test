@@ -49,6 +49,22 @@ const removeWaitingTicket = async (serviceId, ticketId) => {
 };
 
 /**
+ * Clear the entire waiting queue in Redis (e.g. when owner closes/resets the queue)
+ */
+const clearWaitingQueue = async (serviceId) => {
+  if (!isRedisReady()) return null;
+  try {
+    const client = getRedisClient();
+    const key = `queue:${serviceId}:waiting`;
+    await client.del(key);
+    return true;
+  } catch (error) {
+    console.warn(`[Redis clearWaitingQueue Warning] ${error.message}`);
+    return null;
+  }
+};
+
+/**
  * Atomically increment sequence counter
  */
 const getNextSequence = async (serviceId, initialSeq = 0) => {
@@ -89,6 +105,7 @@ module.exports = {
   pushWaitingTicket,
   popNextWaitingTicket,
   removeWaitingTicket,
+  clearWaitingQueue,
   getNextSequence,
   getWaitingCount,
 };

@@ -3,7 +3,7 @@ const Service = require('../models/Service');
 const Ticket = require('../models/Ticket');
 const ApiError = require('../utils/apiError');
 const socketEmitter = require('../sockets/socketEmitter');
-const { getWaitingCount } = require('../redis/queueRedis');
+const { getWaitingCount, clearWaitingQueue } = require('../redis/queueRedis');
 
 const getPublicQueue = async (serviceId) => {
   const service = await Service.findById(serviceId).populate('organizationId', 'name slug category').lean();
@@ -112,9 +112,16 @@ const openQueue = async (ownerId, serviceId) => {
     throw new ApiError(403, 'Forbidden: You do not own this service queue.');
   }
 
+  // Ensure Redis starts clean and empty when opening
+  await clearWaitingQueue(serviceId);
+
   const queue = await Queue.findOneAndUpdate(
     { serviceId },
-    { status: 'OPEN', openedAt: new Date() },
+    {
+      status: 'OPEN',
+      openedAt: new Date(),
+      currentTicketId: null,
+    },
     { new: true, upsert: true }
   );
 
@@ -147,16 +154,52 @@ const closeQueue = async (ownerId, serviceId) => {
     throw new ApiError(403, 'Forbidden: You do not own this service queue.');
   }
 
+  const now = new Date();
+
+  // 1. Find all currently active and waiting tickets for this queue
+  const activeTickets = await Ticket.find({
+    serviceId,
+    status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
+  });
+
+  // 2. Mark all active and waiting tickets as CANCELLED
+  await Ticket.updateMany(
+    {
+      serviceId,
+      status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
+    },
+    {
+      status: 'CANCELLED',
+      cancelledAt: now,
+    }
+  );
+
+  // 3. Clear Redis FIFO list
+  await clearWaitingQueue(serviceId);
+
+  // 4. Update Queue document: status CLOSED, clear current active ticket
   const queue = await Queue.findOneAndUpdate(
     { serviceId },
-    { status: 'CLOSED', closedAt: new Date() },
+    {
+      status: 'CLOSED',
+      closedAt: now,
+      currentTicketId: null,
+    },
     { new: true, upsert: true }
   );
 
-  const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
   const orgId = service.organizationId._id || service.organizationId;
 
-  // Socket notification
+  // 5. Notify all active tickets via WebSockets so their screens update immediately to CANCELLED
+  for (const t of activeTickets) {
+    socketEmitter.emitTicketCancelled(t._id, serviceId, ownerId, {
+      ticketNumber: t.ticketNumber,
+      customerName: t.customerName,
+      message: 'Queue was closed by the organization.',
+    });
+  }
+
+  // 6. Socket notification for queue status changed and 0 waiting count
   socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {
     status: 'CLOSED',
     serviceId: serviceId.toString(),
@@ -164,7 +207,7 @@ const closeQueue = async (ownerId, serviceId) => {
   });
   socketEmitter.emitQueueUpdated(serviceId, ownerId, {
     status: 'CLOSED',
-    waitingCount,
+    waitingCount: 0,
     serviceId: serviceId.toString(),
     organizationId: orgId.toString(),
   });
