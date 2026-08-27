@@ -59,6 +59,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (credential) => {
+    setError(null);
+    try {
+      const res = await authApi.googleAuth(credential);
+      if (res?.data?.token) {
+        localStorage.setItem('queueless_token', res.data.token);
+      }
+      setUser(res?.data?.user || null);
+      return res?.data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -78,6 +93,7 @@ export const AuthProvider = ({ children }) => {
         error,
         login,
         register,
+        googleLogin,
         logout,
         refreshUser: fetchUser,
         isAuthenticated: !!user,

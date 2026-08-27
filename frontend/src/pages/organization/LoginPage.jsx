@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/common/Button';
 import { Mail, Lock, AlertCircle, Building2 } from 'lucide-react';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +29,27 @@ export const LoginPage = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await googleLogin(credentialResponse.credential);
+      if (res?.isNewUser) {
+        navigate('/organization/setup');
+      } else {
+        navigate('/organization/dashboard');
+      }
+    } catch (err) {
+      setError(err.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google Sign-In was cancelled or encountered an issue.');
+  };
+
   return (
     <div className="max-w-md mx-auto px-4 py-16">
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl transition-colors duration-200">
@@ -47,6 +69,25 @@ export const LoginPage = () => {
             <span>{error}</span>
           </div>
         )}
+
+        {/* Google OAuth Button */}
+        <div className="flex flex-col items-center justify-center mb-6">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            shape="pill"
+            size="large"
+            text="signin_with"
+            width="340px"
+          />
+        </div>
+
+        <div className="relative flex items-center justify-center mb-6">
+          <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+          <span className="bg-white dark:bg-slate-900 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 absolute">
+            Or with email
+          </span>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

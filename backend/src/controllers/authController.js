@@ -33,6 +33,25 @@ const login = async (req, res, next) => {
   }
 };
 
+const googleAuth = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+    const { user, token, isNewUser } = await authService.googleAuthOwner(credential);
+    setAuthCookie(res, token);
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user, token, isNewUser },
+          isNewUser ? 'Google registration successful' : 'Google login successful'
+        )
+      );
+  } catch (error) {
+    next(error);
+  }
+};
+
 const logout = async (req, res, next) => {
   try {
     res.clearCookie('token');
@@ -54,6 +73,7 @@ const getMe = async (req, res, next) => {
 module.exports = {
   register,
   login,
+  googleAuth,
   logout,
   getMe,
 };
