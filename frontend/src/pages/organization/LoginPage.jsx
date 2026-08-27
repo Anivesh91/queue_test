@@ -91,28 +91,26 @@ export const LoginPage = () => {
               Power your business operations with zero waiting room congestion, real-time turn notifications, and multi-service counters.
             </p>
 
-            {/* Live Sample Card Preview */}
-            <div className="mt-8 p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 shadow-inner">
-              <div className="flex items-center justify-between text-xs font-semibold text-blue-100 pb-2.5 border-b border-white/10">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  Live Dispatch Simulation
-                </span>
-                <span className="font-mono text-emerald-300">Counter 1</span>
+            {/* Feature Cards */}
+            <div className="mt-8 space-y-3.5">
+              <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 flex items-center justify-center text-[10px]">✓</span>
+                  No Hardware or Kiosks Required
+                </div>
+                <p className="text-[11px] text-blue-200 mt-1 pl-7">
+                  Run directly from any tablet, phone, or laptop browser.
+                </p>
               </div>
-              <div className="flex items-center justify-between pt-3">
-                <div>
-                  <div className="text-[10px] text-blue-200 uppercase font-medium">Currently Calling</div>
-                  <div className="text-2xl font-black font-mono tracking-tight text-white mt-0.5">
-                    GC-042
-                  </div>
+
+              <div className="p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 flex items-center justify-center text-[10px]">✓</span>
+                  Instant Customer Satisfaction
                 </div>
-                <div className="text-right">
-                  <span className="px-2 py-0.5 text-[11px] font-bold bg-amber-400/20 text-amber-300 rounded-full border border-amber-400/30">
-                    CALLED
-                  </span>
-                  <div className="text-[11px] text-blue-200 mt-1">Dr. Sharma • Room 3</div>
-                </div>
+                <p className="text-[11px] text-blue-200 mt-1 pl-7">
+                  Customers wait wherever they want and receive real-time audio & visual chimes.
+                </p>
               </div>
             </div>
           </div>
