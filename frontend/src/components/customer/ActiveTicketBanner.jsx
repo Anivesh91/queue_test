@@ -1,26 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, ArrowRight, X, Clock } from 'lucide-react';
+import { ticketApi } from '../../api/ticketApi';
+import { useSocket } from '../../context/SocketContext';
+import { Ticket, ArrowRight, X } from 'lucide-react';
 
 export const ActiveTicketBanner = () => {
+  const { socket } = useSocket();
   const [activeTicket, setActiveTicket] = useState(null);
   const [dismissed, setDismissed] = useState(false);
 
-  useEffect(() => {
+  const purgeTicketFromStorage = (publicToken) => {
     try {
       const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
-      if (Array.isArray(saved) && saved.length > 0) {
-        const firstActive = saved.find(
-          (t) => t.status !== 'CANCELLED' && t.status !== 'COMPLETED' && t.status !== 'NO_SHOW'
-        );
-        if (firstActive) {
-          setActiveTicket(firstActive);
+      const updated = saved.filter((t) => t.publicToken !== publicToken);
+      localStorage.setItem('queueless_active_tickets', JSON.stringify(updated));
+    } catch (e) {}
+    setActiveTicket(null);
+  };
+
+  const verifyAndLoadActiveTicket = async () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('queueless_active_tickets') || '[]');
+      if (!Array.isArray(saved) || saved.length === 0) {
+        setActiveTicket(null);
+        return;
+      }
+
+      const candidate = saved.find(
+        (t) => t.status !== 'CANCELLED' && t.status !== 'COMPLETED' && t.status !== 'NO_SHOW'
+      );
+
+      if (!candidate || !candidate.publicToken) {
+        setActiveTicket(null);
+        return;
+      }
+
+      // Live server check: verify ticket exists and is still active in DB
+      try {
+        const res = await ticketApi.track(candidate.publicToken);
+        const data = res?.data;
+        const liveTicket = data?.ticket;
+
+        if (liveTicket && ['WAITING', 'CALLED', 'SERVING'].includes(liveTicket.status)) {
+          setActiveTicket({
+            publicToken: liveTicket.publicToken,
+            ticketNumber: liveTicket.ticketNumber,
+            serviceName: data.service?.name || candidate.serviceName,
+            organizationName: data.organization?.name || candidate.organizationName,
+            status: liveTicket.status,
+          });
+        } else {
+          // If ticket has concluded (completed/cancelled/no-show), purge from storage
+          purgeTicketFromStorage(candidate.publicToken);
         }
+      } catch (err) {
+        // If ticket not found in DB (404/deleted), auto-purge from localStorage immediately!
+        purgeTicketFromStorage(candidate.publicToken);
       }
     } catch (e) {
-      console.warn('Could not read active tickets:', e);
+      console.warn('ActiveTicketBanner verification error:', e);
     }
+  };
+
+  useEffect(() => {
+    verifyAndLoadActiveTicket();
   }, []);
+
+  // Listen to real-time events to auto-dismiss if ticket is completed/cancelled
+  useEffect(() => {
+    if (!socket || !activeTicket) return;
+
+    const handleTicketEnd = (payload) => {
+      if (payload?.ticketNumber === activeTicket.ticketNumber) {
+        purgeTicketFromStorage(activeTicket.publicToken);
+      }
+    };
+
+    socket.on('ticket:completed', handleTicketEnd);
+    socket.on('ticket:cancelled', handleTicketEnd);
+    socket.on('ticket:noShow', handleTicketEnd);
+
+    return () => {
+      socket.off('ticket:completed', handleTicketEnd);
+      socket.off('ticket:cancelled', handleTicketEnd);
+      socket.off('ticket:noShow', handleTicketEnd);
+    };
+  }, [socket, activeTicket]);
 
   if (!activeTicket || dismissed) return null;
 
@@ -61,8 +126,10 @@ export const ActiveTicketBanner = () => {
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <button
-            onClick={() => setDismissed(true)}
-            className="text-blue-200 hover:text-white p-0.5 rounded-md focus:outline-none"
+            onClick={() => {
+              setDismissed(true);
+            }}
+            className="text-blue-200 hover:text-white p-0.5 rounded-md focus:outline-none cursor-pointer"
             title="Dismiss banner"
           >
             <X className="w-4 h-4" />
