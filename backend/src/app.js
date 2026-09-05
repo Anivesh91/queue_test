@@ -1,11 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorMiddleware');
 const ApiError = require('./utils/apiError');
 
 const app = express();
+
+// Security Headers
+app.use(helmet());
+
+// Payload Compression (GZIP)
+app.use(compression());
+
+// Rate Limiting (100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes.' }
+});
+app.use('/api', limiter);
 
 // Middlewares
 const allowedOrigins = [
