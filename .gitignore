@@ -28,3 +28,7 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated Artifacts
+.deck-rebuild/
+output/

@@ -1,65 +1,42 @@
 const ticketService = require('../services/ticketService');
 const ApiResponse = require('../utils/apiResponse');
+const asyncHandler = require('../utils/asyncHandler');
 
-const trackTicket = async (req, res, next) => {
-  try {
-    const { publicToken } = req.params;
-    const data = await ticketService.trackTicket(publicToken);
-    res.status(200).json(new ApiResponse(200, data, 'Ticket details fetched'));
-  } catch (error) {
-    next(error);
-  }
-};
+const trackTicket = asyncHandler(async (req, res) => {
+  const { publicToken } = req.params;
+  const data = await ticketService.trackTicket(publicToken);
+  res.status(200).json(new ApiResponse(200, data, 'Ticket details fetched'));
+});
 
-const lookupTickets = async (req, res, next) => {
-  try {
-    const { phone } = req.query;
-    const result = await ticketService.lookupActiveTicketsByPhone(phone);
-    res.status(200).json(new ApiResponse(200, result, 'Active tickets retrieved'));
-  } catch (error) {
-    next(error);
-  }
-};
+const lookupTickets = asyncHandler(async (req, res) => {
+  const { phone } = req.query;
+  const result = await ticketService.lookupActiveTicketsByPhone(phone);
+  res.status(200).json(new ApiResponse(200, result, 'Active tickets retrieved'));
+});
 
-const cancelTicket = async (req, res, next) => {
-  try {
-    const { publicToken } = req.params;
-    const result = await ticketService.cancelTicket(publicToken);
-    res.status(200).json(new ApiResponse(200, result, 'Ticket cancelled successfully'));
-  } catch (error) {
-    next(error);
-  }
-};
+const cancelTicket = asyncHandler(async (req, res) => {
+  const { publicToken } = req.params;
+  const result = await ticketService.cancelTicket(publicToken);
+  res.status(200).json(new ApiResponse(200, result, 'Ticket cancelled successfully'));
+});
 
-const startServing = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const ticket = await ticketService.startServingTicket(req.user._id, ticketId);
-    res.status(200).json(new ApiResponse(200, { ticket }, 'Started serving ticket'));
-  } catch (error) {
-    next(error);
-  }
-};
+const startServing = asyncHandler(async (req, res) => {
+  const { ticketId } = req.params;
+  const ticket = await ticketService.startServingTicket(req.user._id, ticketId);
+  res.status(200).json(new ApiResponse(200, { ticket }, 'Started serving ticket'));
+});
 
-const completeTicket = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const ticket = await ticketService.completeTicket(req.user._id, ticketId);
-    res.status(200).json(new ApiResponse(200, { ticket }, 'Ticket marked as completed'));
-  } catch (error) {
-    next(error);
-  }
-};
+const completeTicket = asyncHandler(async (req, res) => {
+  const { ticketId } = req.params;
+  const ticket = await ticketService.completeTicket(req.user._id, ticketId);
+  res.status(200).json(new ApiResponse(200, { ticket }, 'Ticket marked as completed'));
+});
 
-const markNoShow = async (req, res, next) => {
-  try {
-    const { ticketId } = req.params;
-    const ticket = await ticketService.markNoShowTicket(req.user._id, ticketId);
-    res.status(200).json(new ApiResponse(200, { ticket }, 'Ticket marked as no-show'));
-  } catch (error) {
-    next(error);
-  }
-};
+const markNoShow = asyncHandler(async (req, res) => {
+  const { ticketId } = req.params;
+  const ticket = await ticketService.markNoShowTicket(req.user._id, ticketId);
+  res.status(200).json(new ApiResponse(200, { ticket }, 'Ticket marked as no-show'));
+});
 
 module.exports = {
   trackTicket,
