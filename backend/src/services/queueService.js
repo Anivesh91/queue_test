@@ -22,16 +22,13 @@ const getPublicQueue = async (serviceId) => {
     });
   }
 
-  // Count WAITING tickets
   const waitingCount = await Ticket.countDocuments({
     serviceId,
     status: 'WAITING',
   });
 
-  // Calculate estimated wait in minutes
   const estimatedWait = waitingCount * (service.averageServiceTime || 10);
 
-  // Fetch current active ticket if any
   let currentTicketSummary = null;
   if (queue.currentTicketId) {
     const currentTicket = await Ticket.findById(queue.currentTicketId).lean();
@@ -79,13 +76,11 @@ const getManageQueue = async (ownerId, serviceId) => {
     });
   }
 
-  // Fetch current active ticket (CALLED / SERVING)
   let currentTicket = null;
   if (queue.currentTicketId) {
     currentTicket = await Ticket.findById(queue.currentTicketId);
   }
 
-  // Fetch FIFO waiting tickets
   const waitingTickets = await Ticket.find({
     serviceId,
     status: 'WAITING',
@@ -112,7 +107,6 @@ const openQueue = async (ownerId, serviceId) => {
     throw new ApiError(403, 'Forbidden: You do not own this service queue.');
   }
 
-  // Ensure Redis starts clean and empty when opening
   await clearWaitingQueue(serviceId);
 
   const queue = await Queue.findOneAndUpdate(
@@ -128,7 +122,6 @@ const openQueue = async (ownerId, serviceId) => {
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
   const orgId = service.organizationId._id || service.organizationId;
 
-  // Socket notification
   socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {
     status: 'OPEN',
     serviceId: serviceId.toString(),
@@ -156,13 +149,11 @@ const closeQueue = async (ownerId, serviceId) => {
 
   const now = new Date();
 
-  // 1. Find all currently active and waiting tickets for this queue
   const activeTickets = await Ticket.find({
     serviceId,
     status: { $in: ['WAITING', 'CALLED', 'SERVING'] },
   });
 
-  // 2. Mark all active and waiting tickets as CANCELLED
   await Ticket.updateMany(
     {
       serviceId,
@@ -174,10 +165,8 @@ const closeQueue = async (ownerId, serviceId) => {
     }
   );
 
-  // 3. Clear Redis FIFO list
   await clearWaitingQueue(serviceId);
 
-  // 4. Update Queue document: status CLOSED, clear current active ticket
   const queue = await Queue.findOneAndUpdate(
     { serviceId },
     {
@@ -190,7 +179,6 @@ const closeQueue = async (ownerId, serviceId) => {
 
   const orgId = service.organizationId._id || service.organizationId;
 
-  // 5. Notify all active tickets via WebSockets so their screens update immediately to CANCELLED
   for (const t of activeTickets) {
     socketEmitter.emitTicketCancelled(t._id, serviceId, ownerId, {
       ticketNumber: t.ticketNumber,
@@ -199,7 +187,6 @@ const closeQueue = async (ownerId, serviceId) => {
     });
   }
 
-  // 6. Socket notification for queue status changed and 0 waiting count
   socketEmitter.emitQueueStatusChanged(serviceId, ownerId, {
     status: 'CLOSED',
     serviceId: serviceId.toString(),

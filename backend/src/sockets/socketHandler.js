@@ -7,7 +7,6 @@ const initSockets = (io) => {
   ioInstance = io;
 
   io.on('connection', (socket) => {
-    // 1. Join ticket room via public token or ticket ID
     socket.on('join:ticket', async ({ publicToken, ticketId }) => {
       try {
         let resolvedTicketId = ticketId;
@@ -26,14 +25,12 @@ const initSockets = (io) => {
       }
     });
 
-    // 2. Join service queue room
     socket.on('join:service', ({ serviceId }) => {
       if (serviceId) {
         socket.join(`service:${serviceId}`);
       }
     });
 
-    // 3. Join owner room (with optional JWT token auth)
     socket.on('join:owner', ({ ownerId, token }) => {
       if (token) {
         try {
@@ -43,7 +40,7 @@ const initSockets = (io) => {
             return;
           }
         } catch (err) {
-          // Token invalid, fallback to ownerId if provided
+          // ignore invalid token and check ownerId
         }
       }
 
@@ -52,7 +49,6 @@ const initSockets = (io) => {
       }
     });
 
-    // Leave rooms on demand
     socket.on('leave:ticket', ({ ticketId }) => {
       if (ticketId) socket.leave(`ticket:${ticketId}`);
     });

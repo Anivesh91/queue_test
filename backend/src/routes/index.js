@@ -8,7 +8,6 @@ const ticketRoutes = require('./ticketRoutes');
 const ownerRoutes = require('./ownerRoutes');
 const ApiResponse = require('../utils/apiResponse');
 
-// Health Check
 router.get('/health', (req, res) => {
   res.status(200).json(
     new ApiResponse(
@@ -23,7 +22,6 @@ router.get('/health', (req, res) => {
   );
 });
 
-// Mount module routes
 router.use('/auth', authRoutes);
 router.use('/organizations', organizationRoutes);
 router.use('/services', serviceRoutes);

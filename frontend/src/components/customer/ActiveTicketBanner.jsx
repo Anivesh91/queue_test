@@ -35,7 +35,6 @@ export const ActiveTicketBanner = () => {
         return;
       }
 
-      // Live server check: verify ticket exists and is still active in DB
       try {
         const res = await ticketApi.track(candidate.publicToken);
         const data = res?.data;
@@ -50,11 +49,9 @@ export const ActiveTicketBanner = () => {
             status: liveTicket.status,
           });
         } else {
-          // If ticket has concluded (completed/cancelled/no-show), purge from storage
           purgeTicketFromStorage(candidate.publicToken);
         }
       } catch (err) {
-        // If ticket not found in DB (404/deleted), auto-purge from localStorage immediately!
         purgeTicketFromStorage(candidate.publicToken);
       }
     } catch (e) {
@@ -66,7 +63,6 @@ export const ActiveTicketBanner = () => {
     verifyAndLoadActiveTicket();
   }, []);
 
-  // Listen to real-time events to auto-dismiss if ticket is completed/cancelled
   useEffect(() => {
     if (!socket || !activeTicket) return;
 

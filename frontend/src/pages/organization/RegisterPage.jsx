@@ -101,24 +101,23 @@ export const RegisterPage = () => {
               Create multi-service virtual queues, share your public QR/URL, and call customers with one click.
             </p>
 
-            {/* Benefit Highlights */}
             <div className="mt-8 space-y-4">
               <div className="p-3.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
                 <div className="text-xs font-bold text-white flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 flex items-center justify-center text-[10px]">✓</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
                   No Hardware or Kiosks Required
                 </div>
-                <p className="text-[11px] text-blue-200 mt-1 pl-7">
+                <p className="text-[11px] text-blue-200 mt-1 pl-6">
                   Run directly from any tablet, phone, or laptop browser.
                 </p>
               </div>
 
               <div className="p-3.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15">
                 <div className="text-xs font-bold text-white flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 flex items-center justify-center text-[10px]">✓</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
                   Instant Customer Satisfaction
                 </div>
-                <p className="text-[11px] text-blue-200 mt-1 pl-7">
+                <p className="text-[11px] text-blue-200 mt-1 pl-6">
                   Customers wait wherever they want and receive real-time audio & visual chimes.
                 </p>
               </div>

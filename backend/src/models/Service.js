@@ -45,7 +45,6 @@ const serviceSchema = new mongoose.Schema(
   }
 );
 
-// Compound unique index: ticketPrefix unique within each organization
 serviceSchema.index({ organizationId: 1, ticketPrefix: 1 }, { unique: true });
 
 module.exports = mongoose.model('Service', serviceSchema);

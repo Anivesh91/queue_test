@@ -8,7 +8,6 @@ const asyncHandler = require('../utils/asyncHandler');
 const getOwnerDashboard = asyncHandler(async (req, res) => {
   const ownerId = req.user._id;
 
-  // 1. Fetch organization
   const organization = await Organization.findOne({ ownerId }).lean();
   if (!organization) {
     return res.status(200).json(
@@ -30,18 +29,15 @@ const getOwnerDashboard = asyncHandler(async (req, res) => {
     );
   }
 
-  // 2. Fetch all services under this organization
   const services = await Service.find({ organizationId: organization._id }).lean();
   const serviceIds = services.map((s) => s._id);
 
-  // 3. Fetch queues for these services
   const queues = await Queue.find({ serviceId: { $in: serviceIds } }).lean();
   const queueMap = {};
   queues.forEach((q) => {
     queueMap[q.serviceId.toString()] = q;
   });
 
-  // 4. Fetch waiting counts and current serving tickets for each service
   const serviceQueues = await Promise.all(
     services.map(async (srv) => {
       const srvIdStr = srv._id.toString();
@@ -78,7 +74,6 @@ const getOwnerDashboard = asyncHandler(async (req, res) => {
     })
   );
 
-  // 5. Aggregate stats
   const waitingNow = serviceQueues.reduce((acc, curr) => acc + curr.waitingCount, 0);
   const currentlyServing = serviceQueues.filter(
     (sq) => sq.currentTicket && ['CALLED', 'SERVING'].includes(sq.currentTicket.status)

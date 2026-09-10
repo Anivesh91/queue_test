@@ -12,9 +12,6 @@ const {
   getNextSequence,
 } = require('../redis/queueRedis');
 
-/**
- * Broadcast updated position and ETA to all waiting tickets in a queue
- */
 const notifyWaitingPositions = async (serviceId, avgServiceTime) => {
   try {
     const waitingTickets = await Ticket.find({ serviceId, status: 'WAITING' })
@@ -35,9 +32,6 @@ const notifyWaitingPositions = async (serviceId, avgServiceTime) => {
   }
 };
 
-/**
- * Guest joins an OPEN queue or recovers their existing active ticket seamlessly
- */
 const joinQueue = async (serviceId, { name, phone }) => {
   const service = await Service.findById(serviceId);
   if (!service || !service.isActive) {
@@ -52,7 +46,7 @@ const joinQueue = async (serviceId, { name, phone }) => {
   const cleanPhone = phone.trim();
   const cleanName = name.trim();
 
-  // 1. Check if user already has an active ticket in this service -> Seamlessly restore it!
+  // Return existing active ticket if customer rejoins
   const existingActiveTicket = await Ticket.findOne({
     serviceId,
     customerPhone: cleanPhone,
@@ -92,16 +86,13 @@ const joinQueue = async (serviceId, { name, phone }) => {
     };
   }
 
-  // 2. Check queue status (must be OPEN for new tickets)
   let queue = await Queue.findOne({ serviceId });
   if (!queue || queue.status !== 'OPEN') {
     throw new ApiError(409, 'Queue is currently closed. New joins are not accepted at this time.');
   }
 
-  // 3. Allocate atomic sequence number
   let sequenceNumber = await getNextSequence(serviceId, queue.lastSequenceNumber);
   if (!sequenceNumber) {
-    // MongoDB atomic fallback
     const updatedQueue = await Queue.findOneAndUpdate(
       { serviceId },
       { $inc: { lastSequenceNumber: 1 } },
@@ -109,14 +100,12 @@ const joinQueue = async (serviceId, { name, phone }) => {
     );
     sequenceNumber = updatedQueue.lastSequenceNumber;
   } else {
-    // Keep Mongo queue.lastSequenceNumber in sync
     await Queue.updateOne({ serviceId }, { lastSequenceNumber: sequenceNumber });
   }
 
   const ticketNumber = formatTicketNumber(service.ticketPrefix, sequenceNumber);
   const publicToken = generatePublicToken();
 
-  // 4. Create Ticket document
   const ticket = await Ticket.create({
     publicToken,
     ticketNumber,
@@ -130,10 +119,8 @@ const joinQueue = async (serviceId, { name, phone }) => {
     joinedAt: new Date(),
   });
 
-  // 5. Push to Redis FIFO queue
   await pushWaitingTicket(serviceId, ticket._id);
 
-  // 6. Calculate position & ETA
   const peopleAhead = await Ticket.countDocuments({
     serviceId,
     status: 'WAITING',
@@ -142,7 +129,6 @@ const joinQueue = async (serviceId, { name, phone }) => {
   const estimatedWaitMinutes = peopleAhead * (service.averageServiceTime || 10);
   const waitingCount = peopleAhead + 1;
 
-  // 7. Emit Realtime Updates
   socketEmitter.emitQueueUpdated(serviceId.toString(), org.ownerId.toString(), {
     waitingCount,
     lastJoinedTicket: {
@@ -171,9 +157,6 @@ const joinQueue = async (serviceId, { name, phone }) => {
   };
 };
 
-/**
- * Lookup all active tickets for a customer by phone number
- */
 const lookupActiveTicketsByPhone = async (phone) => {
   if (!phone || phone.trim().length < 4) {
     throw new ApiError(400, 'Please provide a valid phone number.');
@@ -222,9 +205,6 @@ const lookupActiveTicketsByPhone = async (phone) => {
   return { tickets: formattedTickets };
 };
 
-/**
- * Public track ticket by publicToken
- */
 const trackTicket = async (publicToken) => {
   const ticket = await Ticket.findOne({ publicToken })
     .populate('serviceId', 'name ticketPrefix averageServiceTime isActive')
@@ -247,7 +227,6 @@ const trackTicket = async (publicToken) => {
     estimatedWaitMinutes = peopleAhead * (ticket.serviceId.averageServiceTime || 10);
   }
 
-  // Active called/serving ticket in the queue for context
   let currentServingTicketNumber = null;
   if (ticket.queueId && ticket.queueId.currentTicketId) {
     const currentTicket = await Ticket.findById(ticket.queueId.currentTicketId).select('ticketNumber status');
@@ -281,9 +260,6 @@ const trackTicket = async (publicToken) => {
   };
 };
 
-/**
- * Guest cancels WAITING ticket
- */
 const cancelTicket = async (publicToken) => {
   const ticket = await Ticket.findOne({ publicToken })
     .populate('serviceId')
@@ -301,18 +277,15 @@ const cancelTicket = async (publicToken) => {
   ticket.cancelledAt = new Date();
   await ticket.save();
 
-  // Remove from Redis list
   await removeWaitingTicket(ticket.serviceId._id, ticket._id);
 
   const ownerId = ticket.organizationId ? ticket.organizationId.ownerId.toString() : null;
   const serviceId = ticket.serviceId._id.toString();
 
-  // Emit ticket cancelled event
   socketEmitter.emitTicketCancelled(ticket._id.toString(), serviceId, ownerId, {
     ticketNumber: ticket.ticketNumber,
   });
 
-  // Recalculate remaining waiting tickets
   const waitingCount = await Ticket.countDocuments({ serviceId, status: 'WAITING' });
   socketEmitter.emitQueueUpdated(serviceId, ownerId, { waitingCount });
   notifyWaitingPositions(serviceId, ticket.serviceId.averageServiceTime);
@@ -320,9 +293,6 @@ const cancelTicket = async (publicToken) => {
   return { message: 'Ticket cancelled successfully.', ticket };
 };
 
-/**
- * Owner calls next ticket (FIFO)
- */
 const callNextTicket = async (ownerId, serviceId) => {
   const service = await Service.findById(serviceId).populate('organizationId');
   if (!service) {
@@ -338,8 +308,6 @@ const callNextTicket = async (ownerId, serviceId) => {
     throw new ApiError(404, 'Queue not found.');
   }
 
-  // 1. Enforce single active operational ticket rule:
-  // If there is already a CALLED or SERVING ticket, owner must finish it before calling next
   if (queue.currentTicketId) {
     const activeCurrent = await Ticket.findById(queue.currentTicketId);
     if (activeCurrent && ['CALLED', 'SERVING'].includes(activeCurrent.status)) {
@@ -350,7 +318,6 @@ const callNextTicket = async (ownerId, serviceId) => {
     }
   }
 
-  // 2. Select next WAITING ticket atomically (FIFO: smallest sequenceNumber)
   const nextTicket = await Ticket.findOneAndUpdate(
     { serviceId, status: 'WAITING' },
     { status: 'CALLED', calledAt: new Date() },
@@ -361,17 +328,14 @@ const callNextTicket = async (ownerId, serviceId) => {
     throw new ApiError(409, 'No customers are currently waiting in the queue.');
   }
 
-  // 3. Update queue pointer
   queue.currentTicketId = nextTicket._id;
   await queue.save();
 
-  // Pop from Redis
   await popNextWaitingTicket(serviceId);
 
   const ownerIdStr = ownerId.toString();
   const serviceIdStr = serviceId.toString();
 
-  // 4. Emit real-time events
   socketEmitter.emitTicketCalled(nextTicket._id.toString(), serviceIdStr, ownerIdStr, {
     ticketNumber: nextTicket.ticketNumber,
     customerName: nextTicket.customerName,
@@ -391,7 +355,6 @@ const callNextTicket = async (ownerId, serviceId) => {
     },
   });
 
-  // 5. Update positions for remaining waiting tickets
   notifyWaitingPositions(serviceId, service.averageServiceTime);
 
   return {
@@ -401,9 +364,6 @@ const callNextTicket = async (ownerId, serviceId) => {
   };
 };
 
-/**
- * Owner starts serving CALLED ticket (CALLED -> SERVING)
- */
 const startServingTicket = async (ownerId, ticketId) => {
   const ticket = await Ticket.findById(ticketId).populate({
     path: 'serviceId',
@@ -437,9 +397,6 @@ const startServingTicket = async (ownerId, ticketId) => {
   return ticket;
 };
 
-/**
- * Owner completes SERVING ticket (SERVING -> COMPLETED, clear current)
- */
 const completeTicket = async (ownerId, ticketId) => {
   const ticket = await Ticket.findById(ticketId).populate({
     path: 'serviceId',
@@ -462,7 +419,6 @@ const completeTicket = async (ownerId, ticketId) => {
   ticket.completedAt = new Date();
   await ticket.save();
 
-  // Clear current ticket pointer in queue
   const serviceIdStr = ticket.serviceId._id.toString();
   await Queue.updateOne({ serviceId: serviceIdStr, currentTicketId: ticket._id }, { currentTicketId: null });
 
@@ -482,9 +438,6 @@ const completeTicket = async (ownerId, ticketId) => {
   return ticket;
 };
 
-/**
- * Owner marks CALLED ticket as NO_SHOW (CALLED -> NO_SHOW, clear current)
- */
 const markNoShowTicket = async (ownerId, ticketId) => {
   const ticket = await Ticket.findById(ticketId).populate({
     path: 'serviceId',
@@ -507,7 +460,6 @@ const markNoShowTicket = async (ownerId, ticketId) => {
   ticket.noShowAt = new Date();
   await ticket.save();
 
-  // Clear current ticket pointer in queue
   const serviceIdStr = ticket.serviceId._id.toString();
   await Queue.updateOne({ serviceId: serviceIdStr, currentTicketId: ticket._id }, { currentTicketId: null });
 

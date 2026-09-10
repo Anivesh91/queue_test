@@ -85,7 +85,6 @@ export const TicketTrackerPage = () => {
     fetchTicket();
   }, [publicToken]);
 
-  // Handle Socket.IO connection & room joining
   useEffect(() => {
     if (!ticketData?.ticket?.id) return;
     const ticketId = ticketData.ticket.id;
@@ -94,7 +93,6 @@ export const TicketTrackerPage = () => {
 
     if (!socket) return;
 
-    // Listen to real-time events
     const handlePositionUpdated = (data) => {
       setTicketData((prev) => {
         if (!prev) return prev;

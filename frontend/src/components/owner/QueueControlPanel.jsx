@@ -211,8 +211,9 @@ export const QueueControlPanel = ({
               </div>
 
               {hasActiveCurrent && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs text-center">
-                  ⚠️ Complete or mark current ticket before calling next.
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs text-center flex items-center justify-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Complete or mark current ticket before calling next.</span>
                 </div>
               )}
             </div>

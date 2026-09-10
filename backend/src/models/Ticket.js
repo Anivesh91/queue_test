@@ -92,7 +92,6 @@ const ticketSchema = new mongoose.Schema(
   }
 );
 
-// Indexes matching Master Specification Page 15
 ticketSchema.index({ queueId: 1, ticketNumber: 1 }, { unique: true });
 ticketSchema.index({ queueId: 1, sequenceNumber: 1 }, { unique: true });
 ticketSchema.index({ queueId: 1, status: 1, sequenceNumber: 1 });

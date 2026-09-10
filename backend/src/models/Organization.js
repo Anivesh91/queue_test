@@ -68,7 +68,6 @@ const organizationSchema = new mongoose.Schema(
   }
 );
 
-// Compound index for efficient public search
 organizationSchema.index({ category: 1, city: 1, isActive: 1 });
 organizationSchema.index({ name: 'text', description: 'text', city: 'text' });
 

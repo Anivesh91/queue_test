@@ -8,7 +8,6 @@ const emitToRoom = (room, event, data) => {
 };
 
 const socketEmitter = {
-  // Ticket Position Update (to specific ticket room)
   emitTicketPositionUpdated(ticketId, { peopleAhead, estimatedWaitMinutes, status }) {
     emitToRoom(`ticket:${ticketId}`, 'ticket:positionUpdated', {
       ticketId,
@@ -19,7 +18,6 @@ const socketEmitter = {
     });
   },
 
-  // Ticket Called (to ticket room, service room, owner room, and global)
   emitTicketCalled(ticketId, serviceId, ownerId, data) {
     const payload = { ticketId, serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`ticket:${ticketId}`, 'ticket:called', payload);
@@ -29,7 +27,6 @@ const socketEmitter = {
     if (io) io.emit('ticket:called', payload);
   },
 
-  // Ticket Serving
   emitTicketServing(ticketId, serviceId, ownerId, data) {
     const payload = { ticketId, serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`ticket:${ticketId}`, 'ticket:serving', payload);
@@ -39,7 +36,6 @@ const socketEmitter = {
     if (io) io.emit('ticket:serving', payload);
   },
 
-  // Ticket Completed
   emitTicketCompleted(ticketId, serviceId, ownerId, data) {
     const payload = { ticketId, serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`ticket:${ticketId}`, 'ticket:completed', payload);
@@ -49,7 +45,6 @@ const socketEmitter = {
     if (io) io.emit('ticket:completed', payload);
   },
 
-  // Ticket Cancelled
   emitTicketCancelled(ticketId, serviceId, ownerId, data) {
     const payload = { ticketId, serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`ticket:${ticketId}`, 'ticket:cancelled', payload);
@@ -59,7 +54,6 @@ const socketEmitter = {
     if (io) io.emit('ticket:cancelled', payload);
   },
 
-  // Ticket No-Show
   emitTicketNoShow(ticketId, serviceId, ownerId, data) {
     const payload = { ticketId, serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`ticket:${ticketId}`, 'ticket:noShow', payload);
@@ -69,7 +63,6 @@ const socketEmitter = {
     if (io) io.emit('ticket:noShow', payload);
   },
 
-  // Queue state/waiting count updated - emitted to room and globally
   emitQueueUpdated(serviceId, ownerId, data) {
     const payload = { serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`service:${serviceId}`, 'queue:updated', payload);
@@ -78,7 +71,6 @@ const socketEmitter = {
     if (io) io.emit('queue:updated', payload);
   },
 
-  // Queue OPEN/CLOSED changed - emitted to room and globally
   emitQueueStatusChanged(serviceId, ownerId, data) {
     const payload = { serviceId, ...data, timestamp: new Date().toISOString() };
     emitToRoom(`service:${serviceId}`, 'queue:statusChanged', payload);

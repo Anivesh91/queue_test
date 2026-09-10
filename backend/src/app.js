@@ -10,21 +10,16 @@ const ApiError = require('./utils/apiError');
 
 const app = express();
 
-// Security Headers
 app.use(helmet());
-
-// Payload Compression (GZIP)
 app.use(compression());
 
-// Rate Limiting (100 requests per 15 minutes per IP)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 100, 
-  message: { success: false, message: 'Too many requests from this IP, please try again after 15 minutes.' }
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { success: false, message: 'Too many requests, please try again later.' }
 });
 app.use('/api', limiter);
 
-// Middlewares
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:5173',
   'http://localhost:5173',
@@ -35,11 +30,10 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, curl, postman)
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true); // Permissive in dev mode for flexibility
+      return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -52,18 +46,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser(process.env.COOKIE_SECRET || 'queueless_cookie_secret'));
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Welcome to the QueueLess server' });
+  res.status(200).json({ message: 'QueueLess API Server' });
 });
 
-// Mount API v1 Routes
 app.use('/api/v1', routes);
 
-// Handle 404 for undefined routes
 app.use((req, res, next) => {
-  next(new ApiError(404, `Route ${req.originalUrl} not found on this server.`));
+  next(new ApiError(404, `Route ${req.originalUrl} not found.`));
 });
 
-// Centralized error handling
 app.use(errorHandler);
 
 module.exports = app;

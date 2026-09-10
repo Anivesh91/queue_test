@@ -20,7 +20,6 @@ export const OrgSetupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 1: Org Data
   const [orgData, setOrgData] = useState({
     name: '',
     category: 'HOSPITAL_CLINIC',
@@ -30,7 +29,6 @@ export const OrgSetupPage = () => {
     description: '',
   });
 
-  // Step 2: First Service Data
   const [serviceData, setServiceData] = useState({
     name: '',
     ticketPrefix: 'A',
@@ -65,7 +63,6 @@ export const OrgSetupPage = () => {
     try {
       setLoading(true);
 
-      // 1. Create Organization
       const orgRes = await orgApi.create({
         name: orgData.name.trim(),
         category: orgData.category,
@@ -77,7 +74,6 @@ export const OrgSetupPage = () => {
 
       const newOrg = orgRes?.data?.organization;
 
-      // 2. Create First Service under this organization
       if (newOrg?._id) {
         await serviceApi.create(newOrg._id, {
           name: serviceData.name.trim(),

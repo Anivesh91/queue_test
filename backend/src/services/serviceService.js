@@ -49,7 +49,6 @@ const createService = async (ownerId, organizationId, data) => {
 
   const ticketPrefix = (data.ticketPrefix || 'A').toUpperCase().trim();
 
-  // Check prefix uniqueness within the organization
   const existingPrefix = await Service.findOne({ organizationId, ticketPrefix });
   if (existingPrefix) {
     throw new ApiError(409, `Ticket prefix '${ticketPrefix}' is already in use by another service in your organization.`);
@@ -64,7 +63,6 @@ const createService = async (ownerId, organizationId, data) => {
     isActive: true,
   });
 
-  // Automatically create a CLOSED Queue for this service
   const queue = await Queue.create({
     organizationId,
     serviceId: service._id,
@@ -131,7 +129,6 @@ const deactivateService = async (ownerId, serviceId) => {
   service.isActive = false;
   await service.save();
 
-  // Close the queue as well
   const queue = await Queue.findOne({ serviceId: service._id });
   if (queue) {
     queue.status = 'CLOSED';

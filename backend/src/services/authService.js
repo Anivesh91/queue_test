@@ -116,7 +116,6 @@ const googleAuthOwner = async (credential) => {
   const { sub: googleId, email, name, picture } = payload;
   const normalizedEmail = email.toLowerCase();
 
-  // Find by googleId or existing email
   let user = await User.findOne({
     $or: [{ googleId }, { email: normalizedEmail }],
   });
@@ -128,13 +127,11 @@ const googleAuthOwner = async (credential) => {
       throw new ApiError(403, 'Account is inactive or suspended.');
     }
 
-    // Link Google ID and avatar if not set
     if (!user.googleId) user.googleId = googleId;
     if (!user.avatar && picture) user.avatar = picture;
     user.lastLoginAt = new Date();
     await user.save();
   } else {
-    // Create new owner account via Google OAuth
     isNewUser = true;
     user = await User.create({
       name: name || normalizedEmail.split('@')[0],

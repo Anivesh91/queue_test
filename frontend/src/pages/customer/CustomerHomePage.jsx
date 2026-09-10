@@ -8,12 +8,12 @@ import { Search, MapPin, Filter, Layers, AlertCircle, Building2, Radio, Ticket }
 
 const CATEGORIES = [
   { id: 'ALL', label: 'All Categories' },
-  { id: 'HOSPITAL_CLINIC', label: '🏥 Hospital & Clinic' },
-  { id: 'SALON_BARBER', label: '✂️ Salon & Barber' },
-  { id: 'DIAGNOSTIC_CENTER', label: '🔬 Diagnostic Center' },
-  { id: 'REPAIR_SERVICE_CENTER', label: '🔧 Repair & Service' },
-  { id: 'CONSULTATION_CENTER', label: '💼 Consultation' },
-  { id: 'OTHER', label: '🏢 Other Services' },
+  { id: 'HOSPITAL_CLINIC', label: 'Hospital & Clinic' },
+  { id: 'SALON_BARBER', label: 'Salon & Barber' },
+  { id: 'DIAGNOSTIC_CENTER', label: 'Diagnostic Center' },
+  { id: 'REPAIR_SERVICE_CENTER', label: 'Repair & Service' },
+  { id: 'CONSULTATION_CENTER', label: 'Consultation' },
+  { id: 'OTHER', label: 'Other Services' },
 ];
 
 export const CustomerHomePage = () => {
@@ -32,23 +32,22 @@ export const CustomerHomePage = () => {
       setError('');
       const params = {};
       if (searchTerm.trim()) params.search = searchTerm.trim();
-      if (selectedCategory && selectedCategory !== 'ALL') params.category = selectedCategory;
+      if (selectedCategory !== 'ALL') params.category = selectedCategory;
       if (city.trim()) params.city = city.trim();
 
-      const res = await orgApi.search(params);
+      const res = await orgApi.searchOrganizations(params);
       setOrganizations(res?.data?.organizations || []);
     } catch (err) {
-      if (!isBackground) setError(err.message || 'Failed to load organizations.');
+      setError(err.message || 'Failed to load directory. Please try again.');
     } finally {
       if (!isBackground) setLoading(false);
     }
   }, [searchTerm, selectedCategory, city]);
 
   useEffect(() => {
-    fetchOrganizations(false);
-  }, [selectedCategory, fetchOrganizations]);
+    fetchOrganizations();
+  }, [fetchOrganizations]);
 
-  // Real-Time Socket.IO Synchronization for Live Queue Status & Counts
   useEffect(() => {
     if (!socket) return;
 
