@@ -35,7 +35,7 @@ export const CustomerHomePage = () => {
       if (selectedCategory !== 'ALL') params.category = selectedCategory;
       if (city.trim()) params.city = city.trim();
 
-      const res = await orgApi.searchOrganizations(params);
+      const res = await orgApi.search(params);
       setOrganizations(res?.data?.organizations || []);
     } catch (err) {
       setError(err.message || 'Failed to load directory. Please try again.');
