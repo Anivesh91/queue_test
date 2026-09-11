@@ -118,7 +118,7 @@ export const ActiveTicketBanner = () => {
             to={`/customer/tickets/${activeTicket.publicToken}`}
             className="inline-flex items-center gap-1 bg-white text-blue-700 font-bold px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors shadow-xs"
           >
-            <span>Resume Live Tracker</span>
+            <span> Live Ticket Tracker</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <button
