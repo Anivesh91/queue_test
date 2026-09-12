@@ -103,12 +103,24 @@ const loginOwner = async ({ email, password }) => {
   };
 };
 
-const googleAuthOwner = async (credential) => {
-  if (!credential) {
-    throw new ApiError(400, 'Google credential token is required.');
+const googleAuthOwner = async ({ credential, accessToken } = {}) => {
+  let payload = null;
+
+  if (credential) {
+    payload = await verifyGoogleToken(credential);
+  } else if (accessToken) {
+    try {
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.ok) {
+        payload = await response.json();
+      }
+    } catch (fetchErr) {
+      console.error('[Google UserInfo Fetch Error]', fetchErr.message);
+    }
   }
 
-  const payload = await verifyGoogleToken(credential);
   if (!payload || !payload.email) {
     throw new ApiError(401, 'Unable to extract profile from Google account.');
   }

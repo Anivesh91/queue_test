@@ -27,8 +27,8 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const googleAuth = asyncHandler(async (req, res) => {
-  const { credential } = req.body;
-  const { user, token, isNewUser } = await authService.googleAuthOwner(credential);
+  const { credential, accessToken } = req.body;
+  const { user, token, isNewUser } = await authService.googleAuthOwner({ credential, accessToken });
   setAuthCookie(res, token);
   res.status(200).json(
     new ApiResponse(
