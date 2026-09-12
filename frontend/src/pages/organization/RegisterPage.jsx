@@ -163,7 +163,7 @@ export const RegisterPage = () => {
                   shape="rectangular"
                   size="large"
                   text="signup_with"
-                  width="100%"
+                  width="350"
                   theme="filled_blue"
                 />
               </div>
